@@ -26,9 +26,11 @@ import { useState } from "react";
 import Heading from "@/components/heading";
 import { useQuery } from "@tanstack/react-query";
 import { Challenge, Status } from "@/lib/types";
-import { getChallengeById } from "@/lib/actions";
+import { getChallengeById, submitChallengeFlag } from "@/lib/actions";
 import Loader from "@/components/loader";
 import { useParams } from "next/navigation";
+import toast from "react-hot-toast";
+import { useSession } from "next-auth/react";
 
 const getLevelColor = (level: string) => {
   switch (level) {
@@ -47,15 +49,39 @@ export default function ChallengePage() {
   const { id } = useParams();
   console.log(id, "CHALLENGE ID");
 
-  const { data, isLoading } = useQuery<Status | undefined>({
+  const { data, isLoading, refetch } = useQuery<Status | undefined>({
     queryKey: ["singleChallenge"],
     queryFn: () => getChallengeById(id as string),
   });
   console.log(data, "SINGLE CHALLENGE DATA");
   const challenge = (data?.data as Challenge) || null;
   const [flag, setFlag] = useState("");
+  const { data: session } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState("");
+
+  const handleFlagSubmit = async () => {
+    if (flag == "") {
+      toast.error("Flag cannot be empty");
+      return;
+    }
+    const response = await submitChallengeFlag({
+      flag: flag,
+      challenge_id: id as string,
+      user_id: session?.user.user_id,
+    });
+
+    console.log(flag, id, session?.user.user_id);
+
+    if (response) {
+      if (response.status === "success") {
+        toast.success(response?.message as string);
+        refetch();
+      } else {
+        toast.error(response?.message as string);
+      }
+    }
+  };
 
   if (!challenge && !isLoading) {
     return (
@@ -168,6 +194,7 @@ export default function ChallengePage() {
                         className=" border-green-500/30 text-green-400 placeholder:text-gray-500 focus:border-green-400"
                       />
                       <Button
+                        onClick={handleFlagSubmit}
                         type="submit"
                         variant={"default"}
                         disabled={isSubmitting || !flag.trim()}

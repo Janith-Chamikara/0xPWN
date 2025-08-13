@@ -84,3 +84,10 @@ export type Challenge = {
     user_id: string;
   };
 };
+
+export type Rank = {
+  user_id: string;
+  experience: number;
+  username: string;
+  solves: number;
+};

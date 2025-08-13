@@ -2,10 +2,10 @@ import { FaqItem, NavItem } from "@lib/types";
 import { Gem, Shield, Sparkles, Star, Trophy } from "lucide-react";
 
 export const navItems: NavItem[] = [
-  { name: "About", href: "/" },
-  { name: "Leaderboard", href: "/" },
-  { name: "Challenges", href: "/challenges" },
   { name: "FAQ", href: "/#faq" },
+  { name: "Challenges", href: "/challenges" },
+  { name: "Leaderboard", href: "/leaderboard" },
+  { name: "Dashboard", href: "/dashboard" },
 ];
 
 export const faqItem: FaqItem[] = [
