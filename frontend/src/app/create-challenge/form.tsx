@@ -5,7 +5,7 @@ import { Button } from "@components/ui/button";
 import FormField from "@components/ui/form-field";
 import { Label } from "@components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { FieldValues, useForm } from "react-hook-form";
+import { Controller, FieldValues, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -34,6 +34,7 @@ import { useEffect, useState } from "react";
 export default function CreateChallengeForm() {
   const {
     register,
+    control,
     reset,
     setValue,
     watch,
@@ -55,7 +56,18 @@ export default function CreateChallengeForm() {
       const response = await getChallengeById(id as string);
       if (response) {
         if (response.status === "success") {
-          reset(response.data);
+          const challengeResponse = response.data as Challenge;
+          reset({
+            title: challengeResponse.title,
+            description: challengeResponse.description,
+            category_id: challengeResponse.category_id,
+            resources: challengeResponse.resources,
+            difficulty: challengeResponse.difficulty as
+              | "Easy"
+              | "Medium"
+              | "Hard",
+            points: String(challengeResponse.points),
+          });
           setChallenge(response.data as Challenge);
           console.log(response.data, "CHALLENGE DATA");
         } else {
@@ -144,60 +156,40 @@ export default function CreateChallengeForm() {
       </div>
 
       <div className="grid gap-2">
-        <Select
-          defaultValue={challenge ? challenge.category_id : ""}
-          onValueChange={(value) => setValue("category_id", value)}
-        >
-          <SelectTrigger
-            className={cn(
-              "w-full placeholder:text-primary_color border-primary_color bg-transparent",
-              {
-                "border border-red-400": errors["category_id"],
-              }
-            )}
-          >
-            <SelectValue placeholder="Select a category" />
-          </SelectTrigger>
-          <SelectContent>
-            {availableCategories.map((category) => (
-              <SelectItem
-                key={category.category_id}
-                value={category.category_id}
+        <Controller
+          name="category_id"
+          control={control}
+          render={({ field }) => (
+            <Select value={field.value} onValueChange={field.onChange}>
+              <SelectTrigger
+                className={cn(
+                  "w-full placeholder:text-primary_color border-primary_color bg-transparent",
+                  {
+                    "border border-red-400": errors["category_id"],
+                  }
+                )}
               >
-                {category.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableCategories.map((category) => (
+                  <SelectItem
+                    key={category.category_id}
+                    value={category.category_id}
+                  >
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+        {errors["category_id"] && (
+          <span className=" text-xs text-red-400">
+            {errors["category_id"].message as string}
+          </span>
+        )}
       </div>
-
-      {/* <div>
-        <RadioGroup
-          value={resources}
-          onValueChange={(val) => setValue("resources", val)}
-          className="flex items-center gap-4"
-        >
-          <div className="flex items-center gap-3">
-            <RadioGroupItem value="FILES" id="r1" />
-            <Label htmlFor="r1">Files</Label>
-          </div>
-          <div className="flex items-center gap-3">
-            <RadioGroupItem value="LINK" id="r2" />
-            <Label htmlFor="r2">Links</Label>
-          </div>
-        </RadioGroup>
-      </div> */}
-
-      {/* {resources === "FILES" && (
-        <div className="grid gap-2">
-          <Label>Upload Files</Label>
-          <Input
-            type="file"
-            className="border text-white placeholder:text-white border-primary_color bg-transparent p-2 rounded"
-            multiple
-          />
-        </div>
-      )} */}
 
       <div className="grid gap-2">
         <Label>Add file link</Label>
@@ -211,28 +203,36 @@ export default function CreateChallengeForm() {
       </div>
 
       <div className="grid gap-2">
-        <Select
-          defaultValue={challenge ? challenge.difficulty : ""}
-          onValueChange={(value) =>
-            setValue("difficulty", value as "Easy" | "Medium" | "Hard")
-          }
-        >
-          <SelectTrigger
-            className={cn(
-              "w-full placeholder:text-primary_color border-primary_color bg-transparent",
-              {
-                "border border-red-400": errors["difficulty"],
-              }
-            )}
-          >
-            <SelectValue placeholder="Select difficulty level" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Easy">Easy</SelectItem>
-            <SelectItem value="Medium">Medium</SelectItem>
-            <SelectItem value="Hard">Hard</SelectItem>
-          </SelectContent>
-        </Select>
+        <Controller
+          name="difficulty"
+          control={control}
+          render={({ field }) => (
+            <Select value={field.value} onValueChange={field.onChange}>
+              <SelectTrigger
+                className={cn(
+                  "w-full placeholder:text-primary_color border-primary_color bg-transparent",
+                  {
+                    "border border-red-400": errors["category_id"],
+                  }
+                )}
+              >
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {["Easy", "Medium", "Hard"].map((item) => (
+                  <SelectItem key={item} value={item}>
+                    {item}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+        {errors["category_id"] && (
+          <span className=" text-xs text-red-400">
+            {errors["category_id"].message as string}
+          </span>
+        )}
       </div>
 
       <div className="grid gap-2">
