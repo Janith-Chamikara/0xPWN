@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  user_id      String         @id @default(uuid())
+  wallet       String         @unique
+  experience   Float          @default(0)
+  username     String         @unique
+  email        String         @unique
+  password     String
+  bio          String?
+  role         String         @default("user")
+  join_date    DateTime       @default(now())
+  country      String?
+  challenges   Challenge[]
+  submissions  Submission[]
+  writeups     Writeup[]
+  Notification Notification[]
+  Reward       Reward[]
+}
+
+model Challenge {
+  challenge_id String       @id @default(uuid())
+  title        String
+  description  String
+  category_id  String
+  difficulty   String       @default("Medium")
+  points       Int
+  flag         String
+  resources    String
+  solves       Int          @default(0)
+  created_at   DateTime     @default(now())
+  created_by   String
+  category     Category     @relation(fields: [category_id], references: [category_id])
+  user         User         @relation(fields: [created_by], references: [user_id])
+  submissions  Submission[]
+  writeups     Writeup[]
+}
+
+model Submission {
+  submission_id   String    @id @default(uuid())
+  user_id         String
+  challenge_id    String
+  submission_time DateTime  @default(now())
+  user            User      @relation(fields: [user_id], references: [user_id])
+  challenge       Challenge @relation(fields: [challenge_id], references: [challenge_id])
+}
+
+model Writeup {
+  writeup_id   String    @id @default(uuid())
+  user_id      String
+  challenge_id String
+  title        String
+  content      String
+  created_at   DateTime  @default(now())
+  visibility   String    @default("PUBLIC")
+  user         User      @relation(fields: [user_id], references: [user_id])
+  challenge    Challenge @relation(fields: [challenge_id], references: [challenge_id])
+}
+
+model Category {
+  category_id String      @id @default(uuid())
+  name        String      @unique
+  description String
+  challenges  Challenge[]
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  type      String   @default("info")
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  user      User     @relation(fields: [userId], references: [user_id])
+
+  @@index([userId])
+}
+
+model RewardCatalog {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+  imageUrl    String
+  rarity      String
+  reward      Reward?
+}
+
+model Reward {
+  id              String   @id @default(uuid())
+  userId          String
+  rewardCatalogId String   @unique
+  name            String
+  obtainedAt      DateTime @default(now())
+  status          String   @default("UNMINTED")
+
+  user          User          @relation(fields: [userId], references: [user_id])
+  rewardCatalog RewardCatalog @relation(fields: [rewardCatalogId], references: [id])
+}
