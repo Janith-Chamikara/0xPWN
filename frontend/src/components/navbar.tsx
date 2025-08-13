@@ -8,7 +8,7 @@ import { navItems } from "@/lib/data";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { NotificationDrawer } from "./notification-drawer";
 
 export default function Navbar() {
@@ -67,12 +67,15 @@ export default function Navbar() {
 
           {session ? (
             <Button
-              onClick={() => router.push("/dashboard")}
+              onClick={async () => {
+                await signOut();
+                router.push("sign-in");
+              }}
               size={"nav"}
               variant={"default"}
               className="group hidden lg:block"
             >
-              Dashboard
+              Log out
             </Button>
           ) : (
             <Button

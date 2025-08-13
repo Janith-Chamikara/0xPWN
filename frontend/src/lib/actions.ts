@@ -91,6 +91,24 @@ export const signUpAction = async (data: FieldValues) => {
   }
 };
 
+export const getAllUsersByRank = async () => {
+  try {
+    const response = await axiosPublic.get("/user/get-users-by-rank");
+    return {
+      status: "success",
+      data: response.data,
+      message: response.data.message as string,
+    } as Status;
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return {
+        status: "error",
+        message: error.response?.data.message,
+      } as Status;
+    }
+  }
+};
+
 //rewards actions
 export const getAllAvailableRewardCatalogs = async () => {
   try {
@@ -434,6 +452,25 @@ export const deleteChallenge = async (challengeId: string) => {
     } as Status;
   } catch (error) {
     console.log(error, "SIGN UP ERROR");
+    if (isAxiosError(error)) {
+      return {
+        status: "error",
+        message: error.response?.data.message,
+      } as Status;
+    }
+  }
+};
+
+export const submitChallengeFlag = async (data: object) => {
+  try {
+    const response = await axiosPublic.post("challenge/solve-challenge", data);
+    console.log(response.data);
+    return {
+      status: "success",
+      data: response.data,
+      message: response.data.message as string,
+    } as Status;
+  } catch (error) {
     if (isAxiosError(error)) {
       return {
         status: "error",
