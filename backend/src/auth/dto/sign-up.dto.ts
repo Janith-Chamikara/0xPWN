@@ -12,10 +12,6 @@ export class SignUpDto {
   @IsNotEmpty()
   readonly username: string;
 
-  @IsString()
-  @IsNotEmpty()
-  readonly wallet: string;
-
   @IsDefined()
   @IsEmail()
   readonly email: string;

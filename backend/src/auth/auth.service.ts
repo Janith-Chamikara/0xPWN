@@ -29,14 +29,14 @@ export class AuthService {
   ) {}
 
   async signUp(signUpDto: SignUpDto) {
-    const { password, email, wallet, username } = signUpDto;
+    const { password, email, username } = signUpDto;
     const hashedPassword = await getHashedPassword(password);
     if (!hashedPassword) {
       throw new BadRequestException('Cannot hash the given password');
     }
     const isUserExists = await this.prismaService.user.findFirst({
       where: {
-        OR: [{ email: email }, { username: username }, { wallet: wallet }],
+        OR: [{ email: email }, { username: username }],
       },
     });
     if (isUserExists) {
