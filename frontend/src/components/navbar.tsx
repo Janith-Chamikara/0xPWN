@@ -17,6 +17,9 @@ export default function Navbar() {
   const [hasScrolled, setHasScrolled] = useState<boolean>(false);
   const router = useRouter();
   useEffect(() => {
+    // Ensure we're on the client side
+    if (typeof window === "undefined") return;
+
     const handleScroll = () => {
       const scrollTop = window.scrollY;
       setHasScrolled(scrollTop > 0);

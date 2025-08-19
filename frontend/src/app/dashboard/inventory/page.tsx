@@ -1,5 +1,6 @@
 "use client";
 import Loader from "@/components/loader";
+import NoItemsFound from "@/components/no-items-found";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -19,15 +20,21 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { deleteChallenge, getAllChallengesCreatedByUser } from "@/lib/actions";
-import { Challenge, Status } from "@/lib/types";
+import {
+  deleteChallenge,
+  getAllChallengesCreatedByUser,
+  getUserSolvedChallenges,
+} from "@/lib/actions";
+import { Challenge, Status, Submission } from "@/lib/types";
 import { getLevelColor } from "@/lib/utils";
 import { AlertDialogAction } from "@radix-ui/react-alert-dialog";
 import { useQuery } from "@tanstack/react-query";
 import { Coins, Gem, Star, Users } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import toast from "react-hot-toast";
+import { CldImage } from "next-cloudinary";
 
 export default function InventoryPage() {
   const router = useRouter();
@@ -40,8 +47,15 @@ export default function InventoryPage() {
     queryFn: () =>
       getAllChallengesCreatedByUser(session?.user.user_id as string),
   });
+  const { data: userSolvedData, isLoading: isLoadingSolved } = useQuery<
+    Status | undefined
+  >({
+    queryKey: ["userSolvedChallenges", session?.user.user_id],
+    queryFn: () => getUserSolvedChallenges(session?.user.user_id as string),
+  });
 
   const userCreatedChallenges = (data?.data as Challenge[]) ?? [];
+  const userSolvedChallenges = (userSolvedData?.data as Submission[]) ?? [];
 
   const handleDeleteChallenge = async (challengeId: string) => {
     const response = await deleteChallenge(challengeId);
@@ -57,12 +71,6 @@ export default function InventoryPage() {
 
   console.log("Data fetched explorer page :", data);
 
-  // const unMintedRewards = availableRewards.filter(
-  //   (item) => item.status === "UNMINTED"
-  // );
-  // const mintedRewards = availableRewards.filter(
-  //   (item) => item.status !== "UNMINTED"
-  // );
   return (
     <div className="min-h-screen max-w-7xl mx-auto mt-6  !text-primary_color  ">
       <Card className="mt-6 border-green-500/30 backdrop-blur-sm">
@@ -75,62 +83,87 @@ export default function InventoryPage() {
           </CardTitle>
         </CardHeader>
         <Loader isLoading={isLoading}>
+          {userCreatedChallenges.length === 0 && <NoItemsFound />}
           <CardContent>
-            <div className="flex flex-col gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3  gap-4">
               {userCreatedChallenges.map((challenge) => (
                 <Card
                   key={challenge.challenge_id}
-                  className="relative border-green-500/20 hover:border-green-400/50 transition-all duration-300 hover:shadow-lg hover:shadow-green-500/10 cursor-pointer "
+                  className="relative border-green-500/20 hover:border-green-400/50 transition-all duration-300 hover:shadow-lg hover:shadow-green-500/10 cursor-pointer s"
+                  onClick={() =>
+                    router.push(`/challenges/${challenge.challenge_id}`)
+                  }
                 >
-                  <CardHeader>
-                    <div className="flex items-start justify-start gap-4 mb-2">
+                  <div className="relative h-40 w-full">
+                    <CldImage
+                      src={challenge.thumbnail || "sample_challenge_image.png"}
+                      alt={challenge.title}
+                      fill
+                      className="object-cover rounded-t-lg"
+                    />
+                    <div className="absolute top-2 left-2 flex gap-2">
                       <Badge
                         className={`${getLevelColor(
                           challenge.difficulty
-                        )} border`}
+                        )} border text-xs bg-black`}
                       >
                         {challenge.difficulty}
                       </Badge>
                       <Badge
                         variant="outline"
-                        className="border-green-500/30 text-green-400"
+                        className="border-green-500/30 bg-black text-green-400 text-xs"
                       >
                         {challenge.category.name}
                       </Badge>
-                      <div className="flex items-center space-x-1 text-sm text-gray-400">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    </div>
+                    <div className="absolute top-2 right-2">
+                      <div className="flex items-center space-x-1 text-xs text-white bg-black/50 px-2 py-1 rounded">
+                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                         <span>{challenge.points}</span>
                       </div>
                     </div>
-                    <CardTitle className="text-green-400 group-hover:text-green-300 transition-colors">
+                  </div>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-green-400 group-hover:text-green-300 transition-colors text-lg line-clamp-1">
                       {challenge.title}
                     </CardTitle>
-
-                    <CardDescription className="text-gray-400">
-                      {challenge.description}
+                    <CardDescription className="text-gray-400 text-sm line-clamp-2">
+                      {challenge.description.length > 80
+                        ? `${challenge.description.substring(0, 80)}...`
+                        : challenge.description}
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
+                  <CardContent className="pt-0">
+                    <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-1 text-sm text-gray-400">
                         <Users className="h-4 w-4" />
                         <span>{challenge.solves} solves</span>
                       </div>
                     </div>
-                    <div className="flex flex-row mt-4 gap-4">
+                    <div className="flex flex-row gap-2">
                       <Button
-                        onClick={() =>
+                        onClick={(e) => {
+                          e.stopPropagation();
                           router.push(
                             `/create-challenge?id=${challenge.challenge_id}&edit=true`
-                          )
-                        }
-                        variant={"default"}
+                          );
+                        }}
+                        variant="default"
+                        size="sm"
+                        className="flex-1"
                       >
                         Edit
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="default">Delete</Button>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="flex-1"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            Delete
+                          </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent className="bg-[#020A09]">
                           <AlertDialogHeader>
@@ -139,17 +172,17 @@ export default function InventoryPage() {
                             </AlertDialogTitle>
                             <AlertDialogDescription>
                               This action cannot be undone. This will
-                              permanently delete your account and remove your
-                              data from our servers.
+                              permanently delete your challenge and remove it
+                              from our servers.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel className="border-none" asChild>
-                              <Button variant={"default"}>Cancel</Button>
+                              <Button variant="default">Cancel</Button>
                             </AlertDialogCancel>
                             <AlertDialogAction className="border-none" asChild>
                               <Button
-                                variant={"default"}
+                                variant="default"
                                 onClick={() =>
                                   handleDeleteChallenge(challenge.challenge_id)
                                 }
@@ -177,9 +210,88 @@ export default function InventoryPage() {
             </div>
           </CardTitle>
         </CardHeader>
-        <Loader isLoading={isLoading}>
+        <Loader isLoading={isLoadingSolved}>
+          {userSolvedChallenges.length === 0 && <NoItemsFound />}
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3  gap-4">
+              {userSolvedChallenges.map((submission) => (
+                <Card
+                  key={submission.submission_id}
+                  className="relative border-green-500/20 hover:border-green-400/50 transition-all duration-300 hover:shadow-lg hover:shadow-green-500/10 cursor-pointer group"
+                  onClick={() =>
+                    router.push(
+                      `/challenges/${submission.challenge.challenge_id}`
+                    )
+                  }
+                >
+                  <div className="relative h-40 w-full">
+                    <Image
+                      src={
+                        submission.challenge.thumbnail ||
+                        "/sample challenge image.png"
+                      }
+                      alt={submission.challenge.title}
+                      fill
+                      className="object-cover rounded-t-lg"
+                    />
+                    <div className="absolute top-2 left-2 flex gap-2">
+                      <Badge
+                        className={`${getLevelColor(
+                          submission.challenge.difficulty
+                        )} border text-xs bg-black`}
+                      >
+                        {submission.challenge.difficulty}
+                      </Badge>
+                      <Badge
+                        variant="outline"
+                        className="border-green-500/30 text-green-400 text-xs bg-black"
+                      >
+                        {submission.challenge.category.name}
+                      </Badge>
+                      <Badge
+                        variant="outline"
+                        className="border-blue-500/30 text-blue-400 text-xs"
+                      >
+                        Solved
+                      </Badge>
+                    </div>
+                    <div className="absolute top-2 right-2">
+                      <div className="flex items-center space-x-1 text-xs text-white bg-black/50 px-2 py-1 rounded">
+                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                        <span>{submission.challenge.points}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-green-400 group-hover:text-green-300 transition-colors text-lg line-clamp-1">
+                      {submission.challenge.title}
+                    </CardTitle>
+                    <CardDescription className="text-gray-400 text-sm line-clamp-2">
+                      {submission.challenge.description.length > 80
+                        ? `${submission.challenge.description.substring(
+                            0,
+                            80
+                          )}...`
+                        : submission.challenge.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="flex items-center justify-between text-xs text-gray-400">
+                      <div className="flex items-center space-x-1">
+                        <Users className="h-3 w-3" />
+                        <span>{submission.challenge.solves} solves</span>
+                      </div>
+                      <div>
+                        Solved:{" "}
+                        {new Date(
+                          submission.submission_time
+                        ).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </CardContent>
         </Loader>
       </Card>

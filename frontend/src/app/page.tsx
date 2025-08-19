@@ -1,8 +1,17 @@
-import FaqAccordion from "@/components/faq-accordion";
+"use client";
 
+import FaqAccordion from "@/components/faq-accordion";
 import Hero from "@/components/hero";
 import RainingLetters from "@/components/raining-text";
-import Terminal from "@/components/terminal";
+import dynamic from "next/dynamic";
+
+// Dynamically import Terminal component to avoid SSR issues
+const Terminal = dynamic(() => import("@/components/terminal"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-96 w-full bg-[#020A09] animate-pulse rounded" />
+  ),
+});
 
 export default function Home() {
   return (

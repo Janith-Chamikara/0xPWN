@@ -17,9 +17,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   createChallenge,
   getAllCategories,
@@ -42,12 +42,18 @@ export default function CreateChallengeForm() {
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(createChallengeSchema),
+    defaultValues: {
+      uploadThumbnail: false,
+    },
   });
   const router = useRouter();
 
   const [challenge, setChallenge] = useState<Challenge | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
 
   const searchParams = useSearchParams();
+  const uploadThumbnail = watch("uploadThumbnail");
+
   useEffect(() => {
     const isEdit = searchParams.get("edit");
     const id = searchParams.get("id");
@@ -67,6 +73,7 @@ export default function CreateChallengeForm() {
               | "Medium"
               | "Hard",
             points: String(challengeResponse.points),
+            uploadThumbnail: false, // Reset to false for edit mode
           });
           setChallenge(response.data as Challenge);
           console.log(response.data, "CHALLENGE DATA");
@@ -87,29 +94,55 @@ export default function CreateChallengeForm() {
   console.log(data, "CATEGORIES DATA");
   const availableCategories = (data?.data as CategoryResponse[]) ?? [];
 
+  const handleThumbnailChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setValue("thumbnail", file);
+
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setThumbnailPreview(previewUrl);
+    } else {
+      setValue("thumbnail", undefined);
+      setThumbnailPreview(null);
+    }
+  };
+
   const onSubmit = async (data: FieldValues) => {
     console.log(data, "CREATE CHALLENGE DATA");
 
     if (!session?.user?.user_id) {
       toast.error("You must be logged in to create a challenge.");
+      return;
     }
+
+    // Create FormData if thumbnail is uploaded
+    const formData = new FormData();
+    Object.keys(data).forEach((key) => {
+      if (key === "thumbnail" && data.uploadThumbnail && data[key]) {
+        formData.append("thumbnail", data[key]);
+      } else if (key !== "thumbnail" && key !== "uploadThumbnail") {
+        formData.append(key, data[key]);
+      }
+    });
+    formData.append("created_by", session.user.user_id);
+
     if (searchParams.get("edit") === "true") {
       const response = await updateChallenge(
-        { ...data, created_by: session?.user.user_id },
+        formData,
         searchParams.get("id") as string
       );
 
       if (response?.status === "success") {
-        toast.success("Challenge created successfully!");
+        toast.success("Challenge updated successfully!");
         router.push("/challenges");
       } else {
-        toast.error(response?.message || "Failed to create challenge.");
+        toast.error(response?.message || "Failed to update challenge.");
       }
     } else {
-      const response = await createChallenge({
-        ...data,
-        created_by: session?.user.user_id,
-      });
+      const response = await createChallenge(formData);
       if (response?.status === "success") {
         toast.success("Challenge created successfully!");
         router.push("/challenges");
@@ -118,12 +151,14 @@ export default function CreateChallengeForm() {
       }
     }
   };
+
   const resources = watch("resources");
   console.log(resources, "RESOURCES");
+
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="flex flex-col gap-4  mx-auto"
+      className="flex flex-col gap-4 mx-auto"
     >
       <div className="grid gap-2">
         <Label>Title</Label>
@@ -149,7 +184,7 @@ export default function CreateChallengeForm() {
           {...register("description")}
         />
         {errors["description"] && (
-          <span className=" text-xs text-red-400">
+          <span className="text-xs text-red-400">
             {errors["description"].message as string}
           </span>
         )}
@@ -185,7 +220,7 @@ export default function CreateChallengeForm() {
           )}
         />
         {errors["category_id"] && (
-          <span className=" text-xs text-red-400">
+          <span className="text-xs text-red-400">
             {errors["category_id"].message as string}
           </span>
         )}
@@ -212,11 +247,11 @@ export default function CreateChallengeForm() {
                 className={cn(
                   "w-full placeholder:text-primary_color border-primary_color bg-transparent",
                   {
-                    "border border-red-400": errors["category_id"],
+                    "border border-red-400": errors["difficulty"],
                   }
                 )}
               >
-                <SelectValue placeholder="Select a category" />
+                <SelectValue placeholder="Select difficulty level" />
               </SelectTrigger>
               <SelectContent>
                 {["Easy", "Medium", "Hard"].map((item) => (
@@ -228,10 +263,69 @@ export default function CreateChallengeForm() {
             </Select>
           )}
         />
-        {errors["category_id"] && (
-          <span className=" text-xs text-red-400">
-            {errors["category_id"].message as string}
+        {errors["difficulty"] && (
+          <span className="text-xs text-red-400">
+            {errors["difficulty"].message as string}
           </span>
+        )}
+      </div>
+
+      {/* Thumbnail Upload Section */}
+      <div className="grid gap-4">
+        <div className="flex items-center space-x-2">
+          <Controller
+            name="uploadThumbnail"
+            control={control}
+            render={({ field }) => (
+              <Checkbox
+                id="uploadThumbnail"
+                checked={field.value}
+                onCheckedChange={(checked) => {
+                  field.onChange(checked);
+                  if (!checked) {
+                    setValue("thumbnail", undefined);
+                    setThumbnailPreview(null);
+                  }
+                }}
+              />
+            )}
+          />
+          <Label htmlFor="uploadThumbnail">Upload thumbnail image</Label>
+        </div>
+
+        {uploadThumbnail && (
+          <div className="grid gap-2">
+            <Label>Thumbnail Image</Label>
+            <Input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleThumbnailChange}
+              className={cn(
+                "w-full file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary_color file:text-white hover:file:bg-primary_color/90",
+                {
+                  "border border-red-400": errors["thumbnail"],
+                }
+              )}
+            />
+            {errors["thumbnail"] && (
+              <span className="text-xs text-red-400">
+                {errors["thumbnail"].message as string}
+              </span>
+            )}
+
+            {thumbnailPreview && (
+              <div className="mt-2">
+                <Label className="text-sm text-primary_color">Preview:</Label>
+                <div className="mt-1 border border-primary_color rounded-md p-2 bg-transparent">
+                  <img
+                    src={thumbnailPreview}
+                    alt="Thumbnail preview"
+                    className="max-w-xs max-h-32 object-cover rounded"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
 

@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useWallet } from "@meshsdk/react";
 import { useClipboard } from "use-clipboard-copy";
 import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
@@ -28,15 +27,11 @@ export default function DashboardPage() {
   const { data: session } = useSession();
 
   const router = useRouter();
-  const { wallet, connected, name, connecting, connect, disconnect } =
-    useWallet();
   const { data, isLoading, refetch } = useQuery<Status | undefined>({
     queryKey: ["available-rewards", session?.user.user_id],
     queryFn: () =>
       getAllAvailableRewardByUserId(session?.user.user_id as string),
   });
-  const [walletAddress, setWalletAddress] = useState<string>("");
-  const [balance, setBalance] = useState<string>("");
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const clipboard = useClipboard({
     copiedTimeout: 2000,
@@ -46,26 +41,6 @@ export default function DashboardPage() {
     setIsCopied(true);
   };
 
-  useEffect(() => {
-    if (connected && wallet) {
-      // Get wallet address
-      wallet.getRewardAddresses().then((addresses) => {
-        if (addresses.length > 0) {
-          setWalletAddress(addresses[0]);
-        }
-      });
-
-      // Get wallet balance
-      wallet.getBalance().then((balance) => {
-        const lovelace = balance.find((b) => b.unit === "lovelace");
-        if (lovelace) {
-          setBalance(
-            (parseInt(lovelace.quantity) / 1000000).toString() + " ADA"
-          );
-        }
-      });
-    }
-  }, [connected, wallet]);
   const availableRewards = (data?.data as Reward[]) ?? [];
   console.log(availableRewards);
   const mintedRewards = availableRewards.map(
@@ -137,64 +112,6 @@ export default function DashboardPage() {
                 value={(session.user.experience / 10000) * 100}
                 className=" [&>div]:bg-green-500"
               />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Cardano Wallet Status */}
-        <Card className=" border-green-500/30 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="text-green-400 flex items-center">
-              <Wallet className="w-5 h-5 mr-2" />
-              Cardano Wallet
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-green-600">Status</span>
-              <Badge className=" text-green-400 border-green-500/30">
-                Connected
-              </Badge>
-            </div>
-
-            <div className="space-y-2">
-              <div className="text-xs text-green-600">Wallet Address</div>
-              <div className="text-sm font-mono p-2 rounded border border-green-500/20 text-green-400">{`${session.user.wallet.slice(
-                0,
-                10
-              )}...${session.user.wallet.slice(-10)}`}</div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center p-3 rounded-lg border border-green-500/20">
-                <div className="text-lg font-bold text-green-400">
-                  {balance}
-                </div>
-                <div className="text-xs text-green-600">ADA Balance</div>
-              </div>
-              <div className="text-center p-3 rounded-lg border border-green-500/20">
-                <div className="text-lg font-bold text-green-400">{8}</div>
-                <div className="text-xs text-green-600">NFTs</div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between mt-4">
-              <Button
-                variant={"default"}
-                className="w-[49%]"
-                onClick={() => router.push("/dashboard/explorer")}
-              >
-                <Sparkles className="w-4 h-4 mr-2" />
-                View obtainable rewards
-              </Button>
-              <Button
-                variant="default"
-                className="w-[49%]"
-                onClick={() => router.push("/dashboard/marketplace")}
-              >
-                <ShoppingCart className="w-4 h-4 mr-2" />
-                View on Marketplace
-              </Button>
             </div>
           </CardContent>
         </Card>

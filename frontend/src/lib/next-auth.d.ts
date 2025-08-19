@@ -10,6 +10,7 @@ declare module "next-auth" {
       experience: number;
       bio: string;
       wallet: string;
+      solves: number;
       createdAt: string;
       updatedAt: string;
     };
@@ -33,6 +34,7 @@ declare module "next-auth/jwt" {
       bio: string;
       username: string;
       wallet: string;
+      solves: number;
       createdAt: string;
       updatedAt: string;
     };

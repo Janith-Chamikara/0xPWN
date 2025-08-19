@@ -479,3 +479,217 @@ export const submitChallengeFlag = async (data: object) => {
     }
   }
 };
+
+// User profile actions
+export const getUserProfile = async (userId: string) => {
+  try {
+    const session = await getServerSession(authOptions);
+    const response = await axiosPublic.get(
+      `/user/get-info-single?id=${userId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${session?.tokenInfo?.accessToken}`,
+        },
+      }
+    );
+    return {
+      status: "success",
+      data: response.data,
+      message: "User profile fetched successfully",
+    } as Status;
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return {
+        status: "error",
+        message: error.response?.data.message || "Failed to fetch user profile",
+      } as Status;
+    }
+  }
+};
+
+export const getUserChallenges = async (userId: string) => {
+  try {
+    const session = await getServerSession(authOptions);
+    const response = await axiosPublic.get(`/users/${userId}/challenges`, {
+      headers: {
+        Authorization: `Bearer ${session?.tokenInfo?.accessToken}`,
+      },
+    });
+    return {
+      status: "success",
+      data: response.data,
+      message: "User challenges fetched successfully",
+    } as Status;
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return {
+        status: "error",
+        message:
+          error.response?.data.message || "Failed to fetch user challenges",
+      } as Status;
+    }
+  }
+};
+
+export async function getUserSolvedChallenges(userId: string) {
+  try {
+    const session = await getServerSession(authOptions);
+    const response = await axiosPublic.get(
+      `/submission/user-solved-challenges?userId=${userId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${session?.tokenInfo?.accessToken}`,
+        },
+      }
+    );
+    return {
+      status: "success",
+      data: response.data,
+      message: "User solved challenges fetched successfully",
+    } as Status;
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return {
+        status: "error",
+        message:
+          error.response?.data.message ||
+          "Failed to fetch user solved challenges",
+      } as Status;
+    }
+  }
+}
+
+export const getUserSubmissions = async (userId: string) => {
+  try {
+    const session = await getServerSession(authOptions);
+    const response = await axiosPublic.get(`/users/${userId}/submissions`, {
+      headers: {
+        Authorization: `Bearer ${session?.tokenInfo?.accessToken}`,
+      },
+    });
+    return {
+      status: "success",
+      data: response.data,
+      message: "User submissions fetched successfully",
+    } as Status;
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return {
+        status: "error",
+        message:
+          error.response?.data.message || "Failed to fetch user submissions",
+      } as Status;
+    }
+  }
+};
+
+// Get user profile by ID
+export const getUserProfileById = async (userId: string) => {
+  try {
+    const response = await axiosPublic.get(
+      `/user/get-info-single?id=${userId}`
+    );
+    return {
+      status: "success",
+      data: response.data,
+      message: "User profile fetched successfully",
+    } as Status;
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return {
+        status: "error",
+        message: error.response?.data.message || "Failed to fetch user profile",
+      } as Status;
+    }
+  }
+};
+
+// Get user statistics by ID
+export const getUserStatsById = async (userId: string) => {
+  try {
+    const response = await axiosPublic.get(`/user/${userId}`);
+    return {
+      status: "success",
+      data: response.data,
+      message: "User statistics fetched successfully",
+    } as Status;
+  } catch (error) {
+    if (isAxiosError(error)) {
+      console.error("Error fetching user statistics:", error);
+      return {
+        status: "error",
+        message:
+          error.response?.data.message || "Failed to fetch user statistics",
+      } as Status;
+    }
+  }
+};
+
+//writeup actions
+export const createWriteup = async (data: FieldValues) => {
+  try {
+    const response = await axiosPublic.post("/writeup/create", data);
+    console.log(response.data);
+    return {
+      status: "success",
+      data: response.data,
+      message:
+        (response.data.message as string) || "Writeup created successfully",
+    } as Status;
+  } catch (error) {
+    if (isAxiosError(error)) {
+      console.log("Error response data:", error.response?.data);
+      return {
+        status: "error",
+        message: error.response?.data.message,
+      } as Status;
+    }
+  }
+};
+
+export const getWriteupById = async (writeupId: string) => {
+  try {
+    const response = await axiosPublic.get(
+      `/writeup/get-info-single?id=${writeupId}`
+    );
+    return {
+      status: "success",
+      data: response.data,
+      message: "Writeup fetched successfully",
+    } as Status;
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return {
+        status: "error",
+        message: error.response?.data.message || "Failed to fetch writeup",
+      } as Status;
+    }
+  }
+};
+
+export const getWriteupByChallengeId = async (challengeId: string) => {
+  try {
+    const session = await getServerSession(authOptions);
+    const response = await axiosPublic.get(
+      `/writeup/get-by-challenge?challengeId=${challengeId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${session?.tokenInfo?.accessToken}`,
+        },
+      }
+    );
+    return {
+      status: "success",
+      data: response.data,
+      message: "Writeup fetched successfully",
+    } as Status;
+  } catch (error) {
+    if (isAxiosError(error)) {
+      console.log("Error response data:", error.response?.data);
+      return {
+        status: "error",
+        message: error.response?.data.message || "Failed to fetch writeup",
+      } as Status;
+    }
+  }
+};
