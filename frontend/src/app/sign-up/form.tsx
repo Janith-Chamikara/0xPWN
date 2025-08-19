@@ -7,53 +7,25 @@ import { Label } from "@components/ui/label";
 import { PasswordInput } from "@components/ui/password-input";
 import { BorderedWrapper } from "@/components/wrapper";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { FieldValues, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registrationSchema } from "@/lib/schema";
 import { RegistrationFormInputs } from "@/lib/types";
 import { useRouter } from "next/navigation";
-import { useWallet } from "@meshsdk/react";
 import toast from "react-hot-toast";
 import { signUpAction } from "@/lib/actions";
-import { signIn, useSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 export default function RegisterForm() {
   const {
     register,
-    setValue,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<RegistrationFormInputs>({
     resolver: zodResolver(registrationSchema),
   });
-  const { data: session } = useSession();
-  const { wallet, connected, name, connect, error } = useWallet();
-  const [walletAddress, setWalletAddress] = useState<string>("");
-  const [balance, setBalance] = useState<string>("");
-
-  useEffect(() => {
-    if (connected && wallet) {
-      wallet.getUsedAddresses().then((addresses) => {
-        if (addresses.length > 0) {
-          setWalletAddress(addresses[0]);
-        }
-      });
-
-      // Get wallet balance
-      wallet.getBalance().then((balance) => {
-        const lovelace = balance.find((b) => b.unit === "lovelace");
-        if (lovelace) {
-          setBalance(
-            (parseInt(lovelace.quantity) / 1000000).toString() + " ADA"
-          );
-        }
-      });
-    }
-  }, [connected, wallet]);
-
   const router = useRouter();
   const onSubmit = async (data: FieldValues) => {
     console.log(data, "SIGN UP DATA");
@@ -63,7 +35,6 @@ export default function RegisterForm() {
       email: data.email,
       bio: data.bio,
       password: data.password,
-      wallet: walletAddress,
     });
     console.log(response, "SIGN UP RESPONSE");
     if (response) {
@@ -74,7 +45,7 @@ export default function RegisterForm() {
           email: data.email,
           password: data.password,
         });
-        router.push("/dashboard");
+        router.push("/challenges");
       } else {
         toast.error(response.message);
       }
@@ -114,7 +85,7 @@ export default function RegisterForm() {
             className={cn(
               "w-full placeholder:text-primary_color border-primary_color bg-transparent",
               {
-                "border border-red-400": error,
+                "border border-red-400": errors["bio"],
               }
             )}
             placeholder={"Tell us about yourself (optional)"}
@@ -139,31 +110,6 @@ export default function RegisterForm() {
             name="confirmPassword"
             placeholder="XXXXXXXX"
           />
-        </div>
-        <div className="flex flex-col gap-2 items-center justify-center">
-          <Button
-            className="max-w-[600px] w-full"
-            variant={"default"}
-            disabled={connected}
-            onClick={() => {
-              connect("eternl");
-              if (error) {
-                toast.error("Failed to connect wallet. Please try again.");
-              }
-            }}
-          >
-            {connected ? "Connected" : "Connect Wallet"}
-          </Button>
-          {connected && (
-            <BorderedWrapper wrapperClassName="w-full" label="Wallet Info">
-              <p className="text-xs">
-                Address:{" "}
-                {`${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`}
-              </p>
-              <p className="text-xs">Name: {name}</p>
-              <p className="text-xs">Balance: {balance}</p>
-            </BorderedWrapper>
-          )}
         </div>
       </BorderedWrapper>
 

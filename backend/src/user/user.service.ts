@@ -56,4 +56,18 @@ export class UserService {
   async getAllUsers() {
     return this.prismaService.user.findMany();
   }
+
+  async getUsersByRank() {
+    return await this.prismaService.user.findMany({
+      orderBy: {
+        experience: 'desc',
+      },
+      select: {
+        username: true,
+        experience: true,
+        user_id: true,
+        solves: true,
+      },
+    });
+  }
 }

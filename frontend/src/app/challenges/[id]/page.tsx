@@ -4,13 +4,7 @@ import type React from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   ArrowLeft,
@@ -20,17 +14,25 @@ import {
   Users,
   Clock,
   Trophy,
+  Pen,
+  Eye,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import Heading from "@/components/heading";
 import { useQuery } from "@tanstack/react-query";
-import { Challenge, Status } from "@/lib/types";
-import { getChallengeById, submitChallengeFlag } from "@/lib/actions";
+import { Challenge, Status, Writeup } from "@/lib/types";
+import {
+  getChallengeById,
+  getWriteupByChallengeId,
+  submitChallengeFlag,
+} from "@/lib/actions";
 import Loader from "@/components/loader";
 import { useParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
+import { CldImage } from "next-cloudinary";
+import WriteupDialogForm from "@/components/writeup-dialog-form";
 
 const getLevelColor = (level: string) => {
   switch (level) {
@@ -53,6 +55,16 @@ export default function ChallengePage() {
     queryKey: ["singleChallenge"],
     queryFn: () => getChallengeById(id as string),
   });
+  const {
+    data: writeupData,
+    isLoading: writeupLoading,
+    refetch: refetchWriteup,
+  } = useQuery<Status | undefined>({
+    queryKey: ["writups"],
+    queryFn: () => getWriteupByChallengeId(id as string),
+  });
+  const writups = (writeupData?.data as Writeup[]) ?? [];
+  console.log(writeupData, "WRITEUP DATA");
   console.log(data, "SINGLE CHALLENGE DATA");
   const challenge = (data?.data as Challenge) || null;
   const [flag, setFlag] = useState("");
@@ -75,11 +87,12 @@ export default function ChallengePage() {
 
     if (response) {
       if (response.status === "success") {
-        toast.success(response?.message as string);
+        setSubmitMessage(response?.message as string);
         refetch();
       } else {
-        toast.error(response?.message as string);
+        setSubmitMessage(response?.message as string);
       }
+      setIsSubmitting(false);
     }
   };
 
@@ -101,19 +114,6 @@ export default function ChallengePage() {
   const handleSubmitFlag = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      if (
-        flag.toLowerCase().includes("flag") ||
-        flag.toLowerCase().includes("ctf")
-      ) {
-        setSubmitMessage("🎉 Correct! Flag submitted successfully!");
-      } else {
-        setSubmitMessage("❌ Incorrect flag. Try again!");
-      }
-      setIsSubmitting(false);
-    }, 1000);
   };
 
   return (
@@ -132,33 +132,70 @@ export default function ChallengePage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-6">
+                {/* Thumbnail Section */}
+                {challenge?.thumbnail && (
+                  <Card className="bg-transparent border-primary_color overflow-hidden">
+                    <div className="relative w-full h-64 lg:h-80">
+                      <CldImage
+                        src={challenge.thumbnail}
+                        alt={challenge.title}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 1024px) 100vw, 66vw"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 via-transparent to-transparent" />
+                      <div className="absolute bottom-4 left-4 right-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Badge className="border-primary_color text-primary_color">
+                              {challenge.category?.name}
+                            </Badge>
+                            <Badge
+                              className={`${getLevelColor(
+                                challenge.difficulty
+                              )} border`}
+                            >
+                              {challenge.difficulty}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center space-x-1 text-lg font-semibold text-yellow-400">
+                            <Star className="h-5 w-5 fill-yellow-400" />
+                            <span>{challenge.points}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                )}
+
                 <Card className="bg-transparent border-primary_color">
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div>
-                        <div className="flex items-center space-x-2 mb-2">
-                          <Badge className="border-primary_color  text-primary_color">
-                            {challenge?.category?.name}
-                          </Badge>
-                          <Badge
-                            className={`${getLevelColor(
-                              challenge?.difficulty
-                            )} border`}
-                          >
-                            {challenge?.difficulty}
-                          </Badge>
-                        </div>
+                        {!challenge?.thumbnail && (
+                          <div className="flex items-center space-x-2 mb-2">
+                            <Badge className="border-primary_color  text-primary_color">
+                              {challenge?.category?.name}
+                            </Badge>
+                            <Badge
+                              className={`${getLevelColor(
+                                challenge?.difficulty
+                              )} border`}
+                            >
+                              {challenge?.difficulty}
+                            </Badge>
+                          </div>
+                        )}
                         <CardTitle className="text-2xl mb-2">
                           {challenge?.title}
                         </CardTitle>
-                        <CardDescription className="text-gray-400">
-                          {challenge?.description}
-                        </CardDescription>
                       </div>
-                      <div className="flex items-center space-x-1 text-lg font-semibold text-yellow-400">
-                        <Star className="h-5 w-5 fill-yellow-400" />
-                        <span>{challenge?.points}</span>
-                      </div>
+                      {!challenge?.thumbnail && (
+                        <div className="flex items-center space-x-1 text-lg font-semibold text-yellow-400">
+                          <Star className="h-5 w-5 fill-yellow-400" />
+                          <span>{challenge?.points}</span>
+                        </div>
+                      )}
                     </div>
                   </CardHeader>
                 </Card>
@@ -204,7 +241,7 @@ export default function ChallengePage() {
                       {submitMessage && (
                         <div
                           className={`text-sm p-2 rounded ${
-                            submitMessage.includes("Correct")
+                            submitMessage.includes("successfully")
                               ? "bg-green-500/20 text-green-400"
                               : "bg-red-500/20 text-red-400"
                           }`}
@@ -229,6 +266,27 @@ export default function ChallengePage() {
                           View resources
                         </a>
                       </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="border-primary_color">
+                  <CardHeader>
+                    <CardTitle className="text-green-400 flex items-center">
+                      <Pen className="h-5 w-5 mr-2" />
+                      Create Writeup
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <WriteupDialogForm
+                        refetch={refetchWriteup}
+                        challengeId={challenge.challenge_id}
+                        trigger={
+                          <Button size="sm" variant={"default"}>
+                            Create Writeup
+                          </Button>
+                        }
+                      />
                     </div>
                   </CardContent>
                 </Card>
@@ -269,13 +327,97 @@ export default function ChallengePage() {
                       <div className="flex items-center space-x-2 text-gray-400">
                         <span>Author</span>
                       </div>
-                      <span className="text-gray-300">
+                      <Link
+                        href={`/user/${challenge.created_by}`}
+                        className="text-gray-300 hover:text-primary_color transition-colors"
+                      >
                         {challenge?.user?.username}
-                      </span>
+                      </Link>
                     </div>
                   </CardContent>
                 </Card>
               </div>
+            </div>
+
+            {/* Writeups Section */}
+            <div className="mt-8">
+              <Card className="bg-transparent border-primary_color">
+                <CardHeader>
+                  <CardTitle className="text-green-400 flex items-center">
+                    <Pen className="h-5 w-5 mr-2" />
+                    Community Writeups ({writups.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {writeupLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-400 mx-auto"></div>
+                      <p className="text-gray-400 mt-2">Loading writeups...</p>
+                    </div>
+                  ) : writups.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {writups.map((writeup) => (
+                        <Link
+                          key={writeup.writeup_id}
+                          href={`/writeups/${writeup.writeup_id}`}
+                          className="block"
+                        >
+                          <Card className="bg-gray-800/50 border-gray-700 hover:border-green-500/50 transition-colors cursor-pointer h-full">
+                            <CardHeader className="pb-3">
+                              <div className="flex items-start justify-between">
+                                <CardTitle className="text-lg text-green-400 line-clamp-2">
+                                  {writeup.title}
+                                </CardTitle>
+                                <Badge
+                                  className={`ml-2 text-xs ${
+                                    writeup.visibility === "public"
+                                      ? "bg-green-500/20 text-green-400 border-green-500/30"
+                                      : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+                                  } border`}
+                                >
+                                  <Eye className="h-3 w-3 mr-1" />
+                                  {writeup.visibility}
+                                </Badge>
+                              </div>
+                              <div className="flex items-center justify-between text-sm text-gray-400 mt-2">
+                                <div className="flex items-center space-x-1">
+                                  <Users className="h-3 w-3" />
+                                  <span>
+                                    {writeup.user?.username || "Anonymous"}
+                                  </span>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                  <Clock className="h-3 w-3" />
+                                  <span>
+                                    {new Date(
+                                      writeup.created_at
+                                    ).toLocaleDateString()}
+                                  </span>
+                                </div>
+                              </div>
+                            </CardHeader>
+                            <CardContent className="pt-0">
+                              <p className="text-gray-300 text-sm line-clamp-3">
+                                {writeup.content.substring(0, 120)}...
+                              </p>
+                            </CardContent>
+                          </Card>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <div className="text-gray-400 mb-4">
+                        <Pen className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                        <p>No writeups available yet</p>
+                        <p className="text-sm">
+                          Be the first to create a writeup for this challenge!
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           </main>
         </div>

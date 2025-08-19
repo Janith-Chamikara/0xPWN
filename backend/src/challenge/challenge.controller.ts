@@ -6,10 +6,14 @@ import {
   Post,
   Put,
   Query,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ChallengeService } from './challenge.service';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { CreateChallengeDto } from './dto/create-challenge.dto';
+import { SolveChallengeDto } from './dto/solve-challenge.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('challenge')
 export class ChallengeController {
@@ -31,8 +35,15 @@ export class ChallengeController {
   }
 
   @Post('create')
-  async createChallenge(@Body() createChallengeDto: CreateChallengeDto) {
-    return await this.challengeService.createChallenge(createChallengeDto);
+  @UseInterceptors(FileInterceptor('thumbnail'))
+  async createChallenge(
+    @Body() createChallengeDto: CreateChallengeDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return await this.challengeService.createChallenge(
+      createChallengeDto,
+      file,
+    );
   }
 
   @Put('update')
@@ -59,5 +70,10 @@ export class ChallengeController {
   @Get('get-all-solved-challenges')
   async getAllSolvedChallenges(@Query('id') userId: string) {
     return await this.challengeService.getAllSolvedChallenges(userId);
+  }
+
+  @Post('solve-challenge')
+  async solveChallenge(@Body() solveChallengeDto: SolveChallengeDto) {
+    return await this.challengeService.solveChallenge(solveChallengeDto);
   }
 }

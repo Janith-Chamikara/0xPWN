@@ -2,20 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard,
-  PackageSearch,
-  ShoppingCart,
-  BaggageClaim,
-} from "lucide-react";
+import { LayoutDashboard, PackageSearch, BaggageClaim } from "lucide-react";
 
 const sidebarItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: BaggageClaim, label: "My Inventory", href: "/dashboard/inventory" },
 
   { icon: PackageSearch, label: "Item Explorer", href: "/dashboard/explorer" },
-
-  { icon: ShoppingCart, label: "Marketplace", href: "/dashboard/marketplace" },
 ];
 
 export default function Sidebar() {

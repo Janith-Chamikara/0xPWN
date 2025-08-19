@@ -7,7 +7,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get('get-info-single')
-  async getUserInfoHandler(@Query('userId') userId: string) {
+  async getUserInfoHandler(@Query('id') userId: string) {
     return await this.userService.getUserById(userId);
   }
 
@@ -27,5 +27,10 @@ export class UserController {
   @Delete('admin/delete')
   async deleteUserHandler(@Query('userId') userId: string) {
     return await this.userService.deleteUserById(userId);
+  }
+
+  @Get('get-users-by-rank')
+  async getUsersByRankHandler() {
+    return await this.userService.getUsersByRank();
   }
 }

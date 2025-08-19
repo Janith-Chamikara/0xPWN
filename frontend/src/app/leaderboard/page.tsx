@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Rank, Status } from "@/lib/types";
 import { getAllUsersByRank } from "@/lib/actions";
 import Loader from "@/components/loader";
+import Link from "next/link";
 
 function getRankIcon(rank: number) {
   switch (rank) {
@@ -54,7 +55,8 @@ export default function LeaderboardPage() {
 
             <div className="space-y-3">
               {ranks.map((entry, index) => (
-                <div
+                <Link
+                  href={`/user/${entry.user_id}`}
                   key={index + 1}
                   className="grid grid-cols-12 gap-4 items-center py-3 px-4 rounded-lg bg-slate-800/30 hover:bg-slate-800/50 transition-colors border border-green-800 "
                 >
@@ -85,7 +87,7 @@ export default function LeaderboardPage() {
                   <div className="col-span-2">
                     <span>{entry.solves} solves</span>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>

@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { loginSchema, registrationSchema } from "./schema";
+import { loginSchema, registrationSchema, writeupFormSchema } from "./schema";
 
 export type IconProps = React.HTMLAttributes<SVGElement>;
 
@@ -40,6 +40,7 @@ export type Reward = {
 
 export type LogInFormInputs = z.infer<typeof loginSchema>;
 export type RegistrationFormInputs = z.infer<typeof registrationSchema>;
+export type WriteUpFormInputs = z.infer<typeof writeupFormSchema>;
 
 export type MetaDataResponse = {
   policyId: string;
@@ -71,6 +72,7 @@ export type Challenge = {
   title: string;
   description: string;
   category_id: string;
+  thumbnail: string | null;
   difficulty: string;
   points: number;
   flag: string;
@@ -90,4 +92,54 @@ export type Rank = {
   experience: number;
   username: string;
   solves: number;
+};
+
+export type User = {
+  user_id: string;
+  username: string;
+  email: string;
+  bio?: string;
+  role: string;
+  join_date: string;
+  country?: string;
+  experience: number;
+  solves: number;
+};
+
+export type UserStats = {
+  totalChallengesSolved: number;
+  totalChallengesCreated: number;
+  totalWriteups: number;
+  averageSolveTime: string;
+  favoriteCategory: string;
+  currentStreak: number;
+  longestStreak: number;
+  rank: number;
+  totalUsers: number;
+};
+
+export type Submission = {
+  submission_id: string;
+  user_id: string;
+  challenge_id: string;
+  submission_time: string;
+  user: {
+    username: string;
+    user_id: string;
+  };
+  challenge: Challenge;
+};
+
+export type Writeup = {
+  writeup_id: string;
+  user_id: string;
+  challenge_id: string;
+  title: string;
+  content: string;
+  created_at: Date;
+  visibility: string;
+  user?: {
+    username: string;
+    user_id: string;
+  };
 };
