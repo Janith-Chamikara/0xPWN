@@ -5,7 +5,8 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
-      - DATABASE_URL=postgresql://postgres:Jchami@2002@db.wtmhqolvueogimbeeoij.supabase.co:5432/postgres
+      # URL-encode special characters in password and require SSL for Supabase
+      - DATABASE_URL=postgresql://postgres:Jchami@2002@db.wtmhqolvueogimbeeoij.supabase.co:5432/postgres?sslmode=require
       - JWT_SECRET=45ac78fa5c459c2c456a7390b26a8c0b
       - ACCESS_TOKEN_VALIDITY_DURATION_IN_SEC=100
       - REFRESH_TOKEN_SECRET=45ac78fa5c459c2c456a7390b26a8c0b

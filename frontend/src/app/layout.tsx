@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Unbounded } from "next/font/google";
 import "./globals.css";
-import MeshWrapper from "@providers/wallet-provider";
 import Navbar from "@/components/navbar";
 import { Toaster } from "react-hot-toast";
 import Image from "next/image";
@@ -14,7 +13,7 @@ const unbounded = Unbounded({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "0XPWN",
-  description: "Built with Mesh.js and Next.js App Router",
+  description: "Built Next.js App Router",
 };
 
 export default function RootLayout({
@@ -29,21 +28,19 @@ export default function RootLayout({
       >
         <AuthContextProvider>
           <QueryContextProvider>
-            <MeshWrapper>
-              <Navbar />
+            <Navbar />
 
-              <Image
-                src={hero_background}
-                layout="fill"
-                quality={100}
-                alt="hero background image"
-                className="z-[-100] hidden md:block  absolute inset-0 mx-auto object-cover"
-              />
+            <Image
+              src={hero_background}
+              layout="fill"
+              quality={100}
+              alt="hero background image"
+              className="z-[-100] hidden md:block  absolute inset-0 mx-auto object-cover"
+            />
 
-              {children}
-              <Toaster position="top-right" />
-              <Footer />
-            </MeshWrapper>
+            {children}
+            <Toaster position="top-right" />
+            <Footer />
           </QueryContextProvider>
         </AuthContextProvider>
       </body>
