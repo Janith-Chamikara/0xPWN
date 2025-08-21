@@ -79,7 +79,7 @@ export default function DashboardPage() {
 
             <div className="space-y-2">
               <div className="flex flex-row justify-start items-center gap-4 w-full">
-                <div>Player ID : </div>
+                <div>User ID : </div>
                 <div>
                   <Input
                     id="link"
