@@ -5,7 +5,6 @@ import Hero from "@/components/hero";
 import RainingLetters from "@/components/raining-text";
 import dynamic from "next/dynamic";
 
-// Dynamically import Terminal component to avoid SSR issues
 const Terminal = dynamic(() => import("@/components/terminal"), {
   ssr: false,
   loading: () => (
