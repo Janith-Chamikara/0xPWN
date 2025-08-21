@@ -22,27 +22,27 @@ export const faqItem: FaqItem[] = [
   {
     question: "What are the rewards for completing challenges?",
     answer:
-      "While 0xpwn is designed to improve your skills and knowledge, we do have a point-based leaderboard. High-performing players can earn recognition and exclusive in-game rewards. We're exploring adding blockchain-based rewards like NFTs in the future.",
+      "While 0xpwn is designed to improve your skills and knowledge, we do have a point-based leaderboard. High-performing players can earn recognition and exclusive in-game rewards.",
   },
   {
     question: "Do I need a wallet to participate?",
     answer:
-      "No, you can participate in the CTF challenges without a wallet. However, if you wish to earn and trade NFTs or receive rewards on the blockchain, you will need a Cardano-compatible wallet like Nami, Eternl, or Lace.",
+      "No, you can participate in the CTF challenges without a wallet. Wallets are only needed if the platform incorporates any future trading features.",
   },
   {
     question: "Is 0xpwn free to play?",
     answer:
-      "Yes, 0xpwn is completely free to play. However, optional actions such as minting blockchain-based rewards or trading NFTs may require small network fees in ADA (Cardano's native token).",
+      "Yes, 0xpwn is completely free to play. However, optional actions like trading in-game rewards or participating in special features may require small fees.",
   },
   {
     question: "What technologies power 0xpwn?",
     answer:
-      "0xpwn is powered by Next.js for the frontend, MeshJS for Cardano blockchain integration, Aiken for smart contracts, and Cardano for decentralized and secure NFT minting and asset management.",
+      "0xpwn is powered by Next.js for the frontend, MeshJS for blockchain integration (if applicable), Aiken for smart contracts, and a secure infrastructure for reward and asset management.",
   },
   {
-    question: "Can I trade NFTs earned on 0xpwn?",
+    question: "Can I trade rewards earned on 0xpwn?",
     answer:
-      "Yes! If 0xpwn incorporates blockchain-based rewards in the future, NFTs earned through challenges can be stored in your Cardano wallet and traded on any Cardano-compatible NFT marketplace, such as JPG Store.",
+      "Yes! If 0xpwn introduces a marketplace in the future, rewards earned through challenges can be stored and traded on the platform.",
   },
 ];
 
