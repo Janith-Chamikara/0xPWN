@@ -35,6 +35,11 @@ export const loginSchema = z.object({
 
 const DifficultyEnum = z.enum(["Easy", "Medium", "Hard"]);
 
+// Helper to safely check File in environments where it might not exist (SSR/Node)
+const isFileAvailable = typeof File !== "undefined";
+const isBrowserFile = (val: unknown): val is File =>
+  isFileAvailable && val instanceof File;
+
 export const createChallengeSchema = z
   .object({
     title: z.string().min(3, "Title must be at least 3 characters long"),
@@ -45,16 +50,21 @@ export const createChallengeSchema = z
     resources: z.string().min(1, "You need to provide links"),
     difficulty: DifficultyEnum,
     uploadThumbnail: z.boolean().default(false),
+    // Use environment-safe validation for File to avoid SSR build errors
     thumbnail: z
-      .instanceof(File)
-      .refine(
-        (file) => file.size <= 5 * 1024 * 1024,
-        "File size must be less than 5MB"
-      )
-      .refine(
-        (file) => ["image/jpeg", "image/png", "image/webp"].includes(file.type),
-        "Only JPEG, PNG, and WebP images are allowed"
-      )
+      .any()
+      .refine((file) => {
+        // If no file provided, it's fine (handled by object-level refine when uploadThumbnail is true)
+        if (!file) return true;
+        // Skip strict checks on the server where File is not available
+        if (!isBrowserFile(file)) return true;
+        return file.size <= 5 * 1024 * 1024; // <= 5MB
+      }, "File size must be less than 5MB")
+      .refine((file) => {
+        if (!file) return true;
+        if (!isBrowserFile(file)) return true;
+        return ["image/jpeg", "image/png", "image/webp"].includes(file.type);
+      }, "Only JPEG, PNG, and WebP images are allowed")
       .optional(),
     points: z.string().min(1, "Points required"),
     flag: z.string().min(5, "Flag must be at least 5 characters long"),
